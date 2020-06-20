@@ -1,7 +1,4 @@
 @{
-"""
-Coder: Yasuhiro Naito <ynaito@sfc.keio.ac.jp>
-"""
 R  = 8314.0  # R in component membrane (millijoule_per_mole_kelvin)
 T  = 306.15  # T in component membrane (kelvin)
 F  = 96487   # F in component membrane (coulomb_per_mole)
@@ -18,20 +15,23 @@ Vol_rel = 4.41e-5           # Vol_rel in component Ca_handling_by_the_SR (nanoli
 Vol_d   = 0.0200000 * Vol_i # Vol_d in component intracellular_ion_concentrations (nanolitre)
 Vol_c   = 0.136000 * Vol_i  # Vol_c in component cleft_space_ion_concentrations (nanolitre)
 
-Cm = 0.05          # Cm in component membrane (nanoF)
-phi_Na_en = -1.68  # phi_Na_en in component intracellular_ion_concentrations (picoA)
 k_rel_i = 0.0003   # k_rel_i in component Ca_handling_by_the_SR (millimolar)
 
 }
 
 
-Stepper FixedODE1Stepper( Default ){ StepInterval 1.0e-6; }
+Stepper FixedODE1Stepper( Default ){ StepInterval 1.0e-5; }
 
 Stepper PassiveStepper( PSV ) {}
 
 System System( / )
 {
-    StepperID    Default;
+  StepperID    Default;
+
+  Variable Variable( SIZE )
+  {
+      Value    1.0;
+  }
 
   Variable Variable(voi)
   {
@@ -48,42 +48,86 @@ System System( / )
       [voi :.:voi  1];
   }
 
-  ### Size
-  Variable Variable( SIZE )
-  {
-      Value    @(Vol_i * 1.0e-9);
-  }
+}
 
-  Variable Variable(Vol_i)
-  {
-    Name "Vol_i in component intracellular_ion_concentrations (litre)";
-    Value  @(Vol_i * 1.0e-9);
-  }
+System System( /Cleft )
+{
+  StepperID    Default;
 
-  Variable Variable(Vol_up)
-  {
-    Name "Vol_up in component Ca_handling_by_the_SR (litre)";
-    Value  @(Vol_up * 1.0e-9);
-  }
+  Name "The the extracellular cleft space";
 
-  Variable Variable(Vol_rel)
-  {
-    Name "Vol_rel in component Ca_handling_by_the_SR (litre)";
-    Value  @(Vol_rel * 1.0e-9);
-  }
-
-  Variable Variable(Vol_d)
-  {
-    Name "Vol_d in component intracellular_ion_concentrations (litre)";
-    Value  @(Vol_d * 1.0e-9);
-  }
-
-  Variable Variable(Vol_c)
+  Variable Variable(SIZE)
   {
     Name "Vol_c in component cleft_space_ion_concentrations (litre)";
     Value  @(Vol_c * 1.0e-9);
   }
+  Variable Variable(Na_c)
+  {
+    Name "Na_c in component cleft_space_ion_concentrations (molar)";
+    MolarConc  130.011e-3;
+  }
 
+  Variable Variable(K_c)
+  {
+    Name "K_c in component cleft_space_ion_concentrations (molar)";
+    MolarConc  5.3581e-3;
+  }
+
+  Variable Variable(Ca_c)
+  {
+    Name "Ca_c in component cleft_space_ion_concentrations (molar)";
+    MolarConc  1.8147e-3;
+  }
+
+  Process ExpressionFluxProcess(j_Na_c)
+  {
+    Name "d/dt Na_c in component cleft_space_ion_concentrations (millimolar)";
+    Expression "(Na_b-(Na_c.MolarConc*1000))/tau_Na * self.getSuperSystem().SizeN_A / 1000";
+
+    tau_Na  14.3; # tau_Na in component cleft_space_ion_concentrations (second)
+    Na_b  130; # Na_b in component cleft_space_ion_concentrations (millimolar)
+
+    VariableReferenceList
+      [Na_c :.:Na_c  1];
+  }
+
+  Process ExpressionFluxProcess(j_K_c)
+  {
+    Name "d/dt K_c in component cleft_space_ion_concentrations (millimolar)";
+    Expression "(K_b-(K_c.MolarConc*1000))/tau_K * self.getSuperSystem().SizeN_A / 1000";
+
+    tau_K  10; # tau_K in component cleft_space_ion_concentrations (second)
+    K_b  5.4; # K_b in component cleft_space_ion_concentrations (millimolar)
+
+    VariableReferenceList
+      [K_c   :.:K_c  1];
+  }
+
+  Process ExpressionFluxProcess(j_Ca_c)
+  {
+    Name "d/dt Ca_c in component cleft_space_ion_concentrations (millimolar)";
+    Expression "(Ca_b-(Ca_c.MolarConc*1000))/tau_Ca * self.getSuperSystem().SizeN_A / 1000";
+
+    tau_Ca  24.7; # tau_Ca in component cleft_space_ion_concentrations (second)
+    Ca_b  1.8; # Ca_b in component cleft_space_ion_concentrations (millimolar)
+
+    VariableReferenceList
+      [Ca_c :.:Ca_c  1];
+  }
+
+}
+
+System System( /Cytosol )
+{
+  StepperID    Default;
+
+  Name "Cytosol";
+
+  Variable Variable( SIZE )
+  {
+    Name "Vol_i in component intracellular_ion_concentrations (litre)";
+    Value    @(Vol_i * 1.0e-9);
+  }
 
   ### status
 
@@ -91,12 +135,6 @@ System System( / )
   {
     Name "V in component membrane (millivolt)";
     Value  -74.2525;
-  }
-
-  Variable Variable(Na_c)
-  {
-    Name "Na_c in component cleft_space_ion_concentrations (molar)";
-    MolarConc  130.011e-3;
   }
 
   Variable Variable(Na_i)
@@ -123,12 +161,6 @@ System System( / )
     Value  0.8742;
   }
 
-  Variable Variable(Ca_d)
-  {
-    Name "Ca_d in component intracellular_ion_concentrations (molar)";
-    MolarConc  7.2495e-8;
-  }
-
   Variable Variable(d_L)
   {
     Name "d_L in component L_type_Ca_channel_d_L_gate (dimensionless)";
@@ -145,12 +177,6 @@ System System( / )
   {
     Name "f_L_2 in component L_type_Ca_channel_f_L2_gate (dimensionless)";
     Value  0.9986;
-  }
-
-  Variable Variable(K_c)
-  {
-    Name "K_c in component cleft_space_ion_concentrations (molar)";
-    MolarConc  5.3581e-3;
   }
 
   Variable Variable(K_i)
@@ -195,12 +221,6 @@ System System( / )
     Value  0.0001;
   }
 
-  Variable Variable(Ca_c)
-  {
-    Name "Ca_c in component cleft_space_ion_concentrations (molar)";
-    MolarConc  1.8147e-3;
-  }
-
   Variable Variable(Ca_i)
   {
     Name "Ca_i in component intracellular_ion_concentrations (molar)";
@@ -230,37 +250,6 @@ System System( / )
     Name "O_TMgMg in component intracellular_Ca_buffering (dimensionless)";
     Value  0.7094;
   }
-
-  Variable Variable(Ca_rel)
-  {
-    Name "Ca_rel in component Ca_handling_by_the_SR (molar)";
-    MolarConc  0.6465e-3;
-  }
-
-  Variable Variable(Ca_up)
-  {
-    Name "Ca_up in component Ca_handling_by_the_SR (molar)";
-    MolarConc  0.6646e-3;
-  }
-
-  Variable Variable(O_Calse)
-  {
-    Name "O_Calse in component Ca_handling_by_the_SR (dimensionless)";
-    Value  0.4369;
-  }
-
-  Variable Variable(F1)
-  {
-    Name "F1 in component Ca_handling_by_the_SR (dimensionless)";
-    Value  0.4284;
-  }
-
-  Variable Variable(F2)
-  {
-    Name "F2 in component Ca_handling_by_the_SR (dimensionless)";
-    Value  0.0028;
-  }
-
 
   ### algebraic
 
@@ -328,12 +317,6 @@ System System( / )
   {
     Name "p_a_infinity in component delayed_rectifier_K_currents_pa_gate (dimensionless)";
     Value  5.142078505326955e-05;
-  }
-
-  Variable Variable(r_act)
-  {
-    Name "r_act in component Ca_handling_by_the_SR (per_second)";
-    Value  0.22966210288261288;
   }
 
   Variable Variable(E_Na)
@@ -412,12 +395,6 @@ System System( / )
   {
     Name "tau_p_a in component delayed_rectifier_K_currents_pa_gate (second)";
     Value  0.031750398000436095;
-  }
-
-  Variable Variable(r_inact)
-  {
-    Name "r_inact in component Ca_handling_by_the_SR (per_second)";
-    Value  34.342589791678876;
   }
 
   Variable Variable(i_Na)
@@ -516,12 +493,6 @@ System System( / )
     Value  0.0;
   }
 
-  Variable Variable(i_di)
-  {
-    Name "i_di in component intracellular_ion_concentrations (picoA)";
-    Value  0.0;
-  }
-
   Variable Variable(dOCdt)
   {
     Name "dOCdt in component intracellular_Ca_buffering (per_second)";
@@ -540,34 +511,10 @@ System System( / )
     Value  0.0;
   }
 
-  Variable Variable(i_up)
-  {
-    Name "i_up in component Ca_handling_by_the_SR (picoA)";
-    Value  0.0;
-  }
-
-  Variable Variable(i_tr)
-  {
-    Name "i_tr in component Ca_handling_by_the_SR (picoA)";
-    Value  0.0;
-  }
-
-  Variable Variable(i_rel)
-  {
-    Name "i_rel in component Ca_handling_by_the_SR (picoA)";
-    Value  0.0;
-  }
-
-  Variable Variable(v_O_Calse)
-  {
-    Name "d/dt O_Calse in component Ca_handling_by_the_SR (dimensionless)";
-    Value  0.0;
-  }
-
-
   Process ExpressionFluxProcess(v_O_TMgMg)
   {
     Expression "2000.00*Mg_i*((1.00000-O_TMgC.Value)-O_TMgMg.Value)-666.000*O_TMgMg.Value";
+
     Mg_i  2.5; # Mg_i in component intracellular_Ca_buffering (millimolar)
 
     VariableReferenceList
@@ -575,36 +522,12 @@ System System( / )
       [O_TMgC  :.:O_TMgC  0];
   }
 
-  Process ExpressionAssignmentProcess(r_act)
-  {
-    StepperID    PSV;
-
-    Expression "203.800*(pow((Ca_i.MolarConc*1000)/((Ca_i.MolarConc*1000)+k_rel_i), 4.00000)+pow((Ca_d.MolarConc*1000)/((Ca_d.MolarConc*1000)+k_rel_d), 4.00000))";
-    k_rel_d  0.003; # k_rel_d in component Ca_handling_by_the_SR (millimolar)
-    k_rel_i  @k_rel_i;
-
-    VariableReferenceList
-      [r_act :.:r_act  1]
-      [Ca_i  :.:Ca_i   0]
-      [Ca_d  :.:Ca_d   0];
-  }
-
-  Process ExpressionFluxProcess(v_F1)
-  {
-    Expression "r_recov*((1.00000-F1.Value)-F2.Value)-r_act.Value*F1.Value";
-    r_recov  0.815; # r_recov in component Ca_handling_by_the_SR (per_second)
-
-    VariableReferenceList
-      [F1    :.:F1     1]
-      [F2    :.:F2     0]
-      [r_act :.:r_act  0];
-  }
-
   Process ExpressionAssignmentProcess(m_infinity)
   {
     StepperID    PSV;
 
     Name "m_infinity in component sodium_current_m_gate (dimensionless)";
+
     Expression "1.00000/(1.00000+exp((V.Value+27.1200)/-8.21000))";
 
     VariableReferenceList
@@ -638,6 +561,7 @@ System System( / )
     StepperID    PSV;
 
     Name "h_infinity in component sodium_current_h1_gate (dimensionless)";
+
     Expression "1.00000/(1.00000+exp((V.Value+63.6000)/5.30000))";
 
     VariableReferenceList
@@ -659,6 +583,7 @@ System System( / )
   Process ExpressionFluxProcess(v_h1)
   {
     Name "d/dt h1 in component sodium_current_h1_gate (dimensionless)";
+
     Expression "(h_infinity.Value-h1.Value)/tau_h1.Value";
 
     VariableReferenceList
@@ -681,6 +606,7 @@ System System( / )
   Process ExpressionFluxProcess(v_h2)
   {
     Name "d/dt h2 in component sodium_current_h2_gate (dimensionless)";
+
     Expression "(h_infinity.Value-h2.Value)/tau_h2.Value";
 
     VariableReferenceList
@@ -694,6 +620,7 @@ System System( / )
     StepperID    PSV;
 
     Name "d_L_infinity in component L_type_Ca_channel_d_L_gate (dimensionless)";
+
     Expression "1.00000/(1.00000+exp((V.Value+9.00000)/-5.80000))";
 
     VariableReferenceList
@@ -715,6 +642,7 @@ System System( / )
   Process ExpressionFluxProcess(v_d_L)
   {
     Name "d/dt d_L in component L_type_Ca_channel_d_L_gate (dimensionless)";
+
     Expression "(d_L_infinity.Value-d_L.Value)/tau_d_L.Value";
 
     VariableReferenceList
@@ -748,6 +676,7 @@ System System( / )
   Process ExpressionFluxProcess(v_f_L_1)
   {
     Name "d/dt f_L_1 in component L_type_Ca_channel_f_L1_gate (dimensionless)";
+
     Expression "(f_L_infinity.Value-f_L_1.Value)/tau_f_L1.Value";
 
     VariableReferenceList
@@ -770,6 +699,7 @@ System System( / )
   Process ExpressionFluxProcess(v_f_L_2)
   {
     Name "d/dt f_L_2 in component L_type_Ca_channel_f_L2_gate (dimensionless)";
+
     Expression "(f_L_infinity.Value-f_L_2.Value)/tau_f_L2.Value";
 
     VariableReferenceList
@@ -803,6 +733,7 @@ System System( / )
   Process ExpressionFluxProcess(v_r)
   {
     Name "d/dt r in component Ca_independent_transient_outward_K_current_r_gate (dimensionless)";
+
     Expression "(r_infinity.Value-r.Value)/tau_r.Value";
 
     VariableReferenceList
@@ -836,6 +767,7 @@ System System( / )
   Process ExpressionFluxProcess(v_s)
   {
     Name "d/dt s in component Ca_independent_transient_outward_K_current_s_gate (dimensionless)";
+
     Expression "(s_infinity.Value-s.Value)/tau_s.Value";
 
     VariableReferenceList
@@ -869,6 +801,7 @@ System System( / )
   Process ExpressionFluxProcess(v_r_sus)
   {
     Name "d/dt r_sus in component sustained_outward_K_current_r_sus_gate (dimensionless)";
+
     Expression "(r_sus_infinity.Value-r_sus.Value)/tau_r_sus.Value";
 
     VariableReferenceList
@@ -902,6 +835,7 @@ System System( / )
   Process ExpressionFluxProcess(v_s_sus)
   {
     Name "d/dt s_sus in component sustained_outward_K_current_s_sus_gate (dimensionless)";
+
     Expression "(s_sus_infinity.Value-s_sus.Value)/tau_s_sus.Value";
 
     VariableReferenceList
@@ -935,6 +869,7 @@ System System( / )
   Process ExpressionFluxProcess(v_n)
   {
     Name "d/dt n in component delayed_rectifier_K_currents_n_gate (dimensionless)";
+
     Expression "(n_infinity.Value-n.Value)/tau_n.Value";
 
     VariableReferenceList
@@ -968,36 +903,13 @@ System System( / )
   Process ExpressionFluxProcess(v_p_a)
   {
     Name "d/dt p_a in component delayed_rectifier_K_currents_pa_gate (dimensionless)";
+
     Expression "(p_a_infinity.Value-p_a.Value)/tau_p_a.Value";
 
     VariableReferenceList
       [p_a          :.:p_a           1]
       [p_a_infinity :.:p_a_infinity  0]
       [tau_p_a      :.:tau_p_a       0];
-  }
-
-  Process ExpressionAssignmentProcess(r_inact)
-  {
-    StepperID    PSV;
-
-    Expression "33.9600+339.600*(pow((Ca_i.MolarConc*1000)/((Ca_i.MolarConc*1000)+k_rel_i), 4.00000))";
-    k_rel_i  @k_rel_i;
-
-    VariableReferenceList
-      [r_inact :.:r_inact  1]
-      [Ca_i    :.:Ca_i     0];
-  }
-
-  Process ExpressionFluxProcess(v_F2)
-  {
-    Name "d/dt F2 in component Ca_handling_by_the_SR (dimensionless)";
-    Expression "r_act.Value*F1.Value-r_inact.Value*F2.Value";
-
-    VariableReferenceList
-      [F2      :.:F2       1]
-      [r_act   :.:r_act    0]
-      [F1      :.:F1       0]
-      [r_inact :.:r_inact  0];
   }
 
   Process ExpressionAssignmentProcess(E_K)
@@ -1010,9 +922,9 @@ System System( / )
     R  @R;
 
     VariableReferenceList
-      [E_K :.:E_K  1]
-      [K_c :.:K_c  0]
-      [K_i :.:K_i  0];
+      [E_K :.:E_K         1]
+      [K_c :../Cleft:K_c  0]
+      [K_i :.:K_i         0];
   }
 
   Process ExpressionAssignmentProcess(i_t)
@@ -1050,16 +962,17 @@ System System( / )
     StepperID    PSV;
 
     Expression "(g_K1*(pow((K_c.MolarConc*1000)/1.00000, 0.445700))*(V.Value-E_K.Value))/(1.00000+exp((1.50000*((V.Value-E_K.Value)+3.60000)*F)/(R*T)))";
+
     T  @T;
     R  @R;
     F  @F;
     g_K1  3; # g_K1 in component inward_rectifier (nanoS)
 
     VariableReferenceList
-      [i_K1 :.:i_K1  1]
-      [K_c  :.:K_c   0]
-      [V    :.:V     0]
-      [E_K  :.:E_K   0];
+      [i_K1 :.:i_K1        1]
+      [K_c  :../Cleft:K_c  0]
+      [V    :.:V           0]
+      [E_K  :.:E_K         0];
   }
 
   Process ExpressionAssignmentProcess(p_i)
@@ -1078,6 +991,7 @@ System System( / )
     StepperID    PSV;
 
     Expression "g_Kr*p_a.Value*p_i.Value*(V.Value-E_K.Value)";
+
     g_Kr  0.5; # g_Kr in component delayed_rectifier_K_currents (nanoS)
 
     VariableReferenceList
@@ -1093,6 +1007,7 @@ System System( / )
     StepperID    PSV;
 
     Expression "g_Ks*n.Value*(V.Value-E_K.Value)";
+
     g_Ks  1; # g_Ks in component delayed_rectifier_K_currents (nanoS)
 
     VariableReferenceList
@@ -1107,51 +1022,35 @@ System System( / )
     StepperID    PSV;
 
     Expression "(((((i_NaK_max*(K_c.MolarConc*1000))/((K_c.MolarConc*1000)+k_NaK_K))*(pow((Na_i.MolarConc*1000), 1.50000)))/(pow((Na_i.MolarConc*1000), 1.50000)+pow(k_NaK_Na, 1.50000)))*(V.Value+150.000))/(V.Value+200.000)";
+
     k_NaK_Na  11; # k_NaK_Na in component sodium_potassium_pump (millimolar)
     k_NaK_K  1; # k_NaK_K in component sodium_potassium_pump (millimolar)
     i_NaK_max  70.8253; # i_NaK_max in component sodium_potassium_pump (picoA)
 
     VariableReferenceList
-      [i_NaK :.:i_NaK  1]
-      [K_c   :.:K_c    0]
-      [Na_i  :.:Na_i   0]
-      [V     :.:V      0];
+      [i_NaK :.:i_NaK       1]
+      [K_c   :../Cleft:K_c  0]
+      [Na_i  :.:Na_i        0]
+      [V     :.:V           0];
   }
 
   Process ExpressionFluxProcess(j_K_i)
   {
     Name "d/dt K_i in component intracellular_ion_concentrations (millimolar)";
-    Expression "-((i_t.Value+i_sus.Value+i_K1.Value+i_Kr.Value+i_Ks.Value)-2.00000*i_NaK.Value)/(Vol_i*F) * self.getSuperSystem().SizeN_A/1000";
+
+    Expression "((i_t.Value+i_sus.Value+i_K1.Value+i_Kr.Value+i_Ks.Value)-2.00000*i_NaK.Value)/F * N_A *1.0e-12";
+
     F  @F;
-    Vol_i  @Vol_i;
 
     VariableReferenceList
-      [K_i   :.:K_i    1]
-      [i_t   :.:i_t    0]
-      [i_sus :.:i_sus  0]
-      [i_K1  :.:i_K1   0]
-      [i_Kr  :.:i_Kr   0]
-      [i_Ks  :.:i_Ks   0]
-      [i_NaK :.:i_NaK  0];
-  }
-
-  Process ExpressionFluxProcess(j_K_c)
-  {
-    Name "d/dt K_c in component cleft_space_ion_concentrations (millimolar)";
-    Expression "(K_b-(K_c.MolarConc*1000))/tau_K * self.getSuperSystem().SizeN_A/1000 + ((i_t.Value+i_sus.Value+i_K1.Value+i_Kr.Value+i_Ks.Value)-2.00000*i_NaK.Value)/(Vol_c*F) * self.getSuperSystem().SizeN_A/1000";
-    F  @F;
-    Vol_c  @Vol_c;
-    tau_K  10; # tau_K in component cleft_space_ion_concentrations (second)
-    K_b  5.4; # K_b in component cleft_space_ion_concentrations (millimolar)
-
-    VariableReferenceList
-      [K_c   :.:K_c    1]
-      [i_t   :.:i_t    0]
-      [i_sus :.:i_sus  0]
-      [i_K1  :.:i_K1   0]
-      [i_Kr  :.:i_Kr   0]
-      [i_Ks  :.:i_Ks   0]
-      [i_NaK :.:i_NaK  0];
+      [K_c   :../Cleft:K_c  1]
+      [K_i   :.:K_i        -1]
+      [i_t   :.:i_t         0]
+      [i_sus :.:i_sus       0]
+      [i_K1  :.:i_K1        0]
+      [i_Kr  :.:i_Kr        0]
+      [i_Ks  :.:i_Ks        0]
+      [i_NaK :.:i_NaK       0];
   }
 
   Process ExpressionAssignmentProcess(E_Na)
@@ -1159,14 +1058,15 @@ System System( / )
     StepperID    PSV;
 
     Expression "((R*T)/F)*log((Na_c.MolarConc*1000)/(Na_i.MolarConc*1000))";
+
     F  @F;
     T  @T;
     R  @R;
 
     VariableReferenceList
-      [E_Na :.:E_Na  1]
-      [Na_c :.:Na_c  0]
-      [Na_i :.:Na_i  0];
+      [E_Na :.:E_Na         1]
+      [Na_c :../Cleft:Na_c  0]
+      [Na_i :.:Na_i         0];
   }
 
   Process ExpressionAssignmentProcess(i_Na)
@@ -1174,19 +1074,20 @@ System System( / )
     StepperID    PSV;
 
     Expression "(((P_Na*(pow(m.Value, 3.00000))*(0.900000*h1.Value+0.100000*h2.Value)*(Na_c.MolarConc*1000)*V.Value*(pow(F, 2.00000)))/(R*T))*(exp(((V.Value-E_Na.Value)*F)/(R*T))-1.00000))/(exp((V.Value*F)/(R*T))-1.00000)";
+
     T  @T;
     R  @R;
     F  @F;
     P_Na  0.0016; # P_Na in component sodium_current (nanolitre_per_second)
 
     VariableReferenceList
-      [i_Na :.:i_Na  1]
-      [m    :.:m     0]
-      [h1   :.:h1    0]
-      [h2   :.:h2    0]
-      [Na_c :.:Na_c  0]
-      [V    :.:V     0]
-      [E_Na :.:E_Na  0];
+      [i_Na :.:i_Na         1]
+      [m    :.:m            0]
+      [h1   :.:h1           0]
+      [h2   :.:h2           0]
+      [Na_c :../Cleft:Na_c  0]
+      [V    :.:V            0]
+      [E_Na :.:E_Na         0];
   }
 
   Process ExpressionAssignmentProcess(f_Ca)
@@ -1194,11 +1095,12 @@ System System( / )
     StepperID    PSV;
 
     Expression "(Ca_d.MolarConc*1000)/((Ca_d.MolarConc*1000)+k_Ca)";
+
     k_Ca  0.025; # k_Ca in component L_type_Ca_channel (millimolar)
 
     VariableReferenceList
-      [f_Ca :.:f_Ca  1]
-      [Ca_d :.:Ca_d  0];
+      [f_Ca :.:f_Ca     1]
+      [Ca_d :../d:Ca_d  0];
   }
 
   Process ExpressionAssignmentProcess(i_Ca_L)
@@ -1206,6 +1108,7 @@ System System( / )
     StepperID    PSV;
 
     Expression "g_Ca_L*d_L.Value*(f_Ca.Value*f_L_1.Value+(1.00000-f_Ca.Value)*f_L_2.Value)*(V.Value-E_Ca_app)";
+
     E_Ca_app  60; # E_Ca_app in component L_type_Ca_channel (millivolt)
     g_Ca_L  6.75; # g_Ca_L in component L_type_Ca_channel (nanoS)
 
@@ -1223,6 +1126,7 @@ System System( / )
     StepperID    PSV;
 
     Expression "g_B_Na*(V.Value-E_Na.Value)";
+
     g_B_Na  0.060599; # g_B_Na in component background_currents (nanoS)
 
     VariableReferenceList
@@ -1235,15 +1139,16 @@ System System( / )
   {
     StepperID    PSV;
 
-    Expression "((R*T)/(2.00000*F))*log((Ca_c.MolarConc*1000)/(Ca_i.MolarConc*1000))";
+    Expression "((R*T)/(2.00000*F))*log(Ca_c.Value/Ca_i.Value)";
+
     F  @F;
     T  @T;
     R  @R;
 
     VariableReferenceList
-      [E_Ca :.:E_Ca  1]
-      [Ca_c :.:Ca_c  0]
-      [Ca_i :.:Ca_i  0];
+      [E_Ca :.:E_Ca         1]
+      [Ca_c :../Cleft:Ca_c  0]
+      [Ca_i :.:Ca_i         0];
   }
 
   Process ExpressionAssignmentProcess(i_B_Ca)
@@ -1251,6 +1156,7 @@ System System( / )
     StepperID    PSV;
 
     Expression "g_B_Ca*(V.Value-E_Ca.Value)";
+
     g_B_Ca  0.078681; # g_B_Ca in component background_currents (nanoS)
 
     VariableReferenceList
@@ -1264,6 +1170,7 @@ System System( / )
     StepperID    PSV;
 
     Expression "(i_CaP_max*(Ca_i.MolarConc*1000))/((Ca_i.MolarConc*1000)+k_CaP)";
+
     k_CaP  0.0002; # k_CaP in component sarcolemmal_calcium_pump_current (millimolar)
     i_CaP_max  4; # i_CaP_max in component sarcolemmal_calcium_pump_current (picoA)
 
@@ -1277,6 +1184,7 @@ System System( / )
     StepperID    PSV;
 
     Expression "(k_NaCa*((pow((Na_i.MolarConc*1000), 3.00000))*(Ca_c.MolarConc*1000)*exp((gamma*F*V.Value)/(R*T))-(pow((Na_c.MolarConc*1000), 3.00000))*(Ca_i.MolarConc*1000)*exp(((gamma-1.00000)*V.Value*F)/(R*T))))/(1.00000+d_NaCa*((pow((Na_c.MolarConc*1000), 3.00000))*(Ca_i.MolarConc*1000)+(pow((Na_i.MolarConc*1000), 3.00000))*(Ca_c.MolarConc*1000)))";
+
     T  @T;
     R  @R;
     F  @F;
@@ -1285,12 +1193,12 @@ System System( / )
     d_NaCa  0.0003; # d_NaCa in component Na_Ca_ion_exchanger_current (per_millimolar_4)
 
     VariableReferenceList
-      [i_NaCa :.:i_NaCa  1]
-      [Na_i   :.:Na_i    0]
-      [Ca_c   :.:Ca_c    0]
-      [V      :.:V       0]
-      [Na_c   :.:Na_c    0]
-      [Ca_i   :.:Ca_i    0];
+      [i_NaCa :.:i_NaCa       1]
+      [Na_i   :.:Na_i         0]
+      [Ca_c   :../Cleft:Ca_c  0]
+      [V      :.:V            0]
+      [Na_c   :../Cleft:Na_c  0]
+      [Ca_i   :.:Ca_i         0];
   }
 
   Process ExpressionAssignmentProcess(i_Stim)
@@ -1298,7 +1206,9 @@ System System( / )
     StepperID    PSV;
 
     Name "i_Stim in component membrane (picoA)";
+
     Expression "piecewise(stim_amplitude, and(and(geq(voi.Value , stim_start), leq(voi.Value , stim_end)), leq((voi.Value-stim_start)-floor((voi.Value-stim_start)/stim_period)*stim_period , stim_duration)), 0.00000)";
+
     stim_amplitude  @stim_amplitude;
     stim_duration  @stim_duration;
     stim_period  @stim_period;
@@ -1307,14 +1217,16 @@ System System( / )
 
     VariableReferenceList
       [i_Stim :.:i_Stim  1]
-      [voi    :.:voi     0];
+      [voi    :/:voi     0];
   }
 
   Process ExpressionFluxProcess(v_V)
   {
     Name "d/dt V in component membrane (millivolt)";
+
     Expression "(-1.00000/Cm)*(i_Stim.Value+i_Na.Value+i_Ca_L.Value+i_t.Value+i_sus.Value+i_K1.Value+i_Kr.Value+i_Ks.Value+i_B_Na.Value+i_B_Ca.Value+i_NaK.Value+i_CaP.Value+i_NaCa.Value)";
-    Cm  @Cm;
+
+    Cm  0.05; # Cm in component membrane (nanoF)
 
     VariableReferenceList
       [V      :.:V       1]
@@ -1336,57 +1248,25 @@ System System( / )
   Process ExpressionFluxProcess(j_Na_i)
   {
     Name "d/dt Na_i in component intracellular_ion_concentrations (millimolar)";
-    Expression "-(i_Na.Value+i_B_Na.Value+3.00000*i_NaK.Value+3.00000*i_NaCa.Value+phi_Na_en)/(Vol_i*F) * self.getSuperSystem().SizeN_A/1000";
+
+    Expression "(i_Na.Value+i_B_Na.Value+3.00000*i_NaK.Value+3.00000*i_NaCa.Value+phi_Na_en)/F * N_A * 1.0e-12";
+
     F  @F;
-    Vol_i  @Vol_i;
-    phi_Na_en  @phi_Na_en;
-
-      VariableReferenceList
-        [Na_i   :.:Na_i    1]
-        [i_Na   :.:i_Na    0]
-        [i_B_Na :.:i_B_Na  0]
-        [i_NaK  :.:i_NaK   0]
-        [i_NaCa :.:i_NaCa  0];
-  }
-
-  Process ExpressionFluxProcess(j_Na_c)
-  {
-    Name "d/dt Na_c in component cleft_space_ion_concentrations (millimolar)";
-    Expression "(Na_b-(Na_c.MolarConc*1000))/tau_Na * self.getSuperSystem().SizeN_A/1000 + (i_Na.Value+i_B_Na.Value+3.00000*i_NaK.Value+3.00000*i_NaCa.Value+phi_Na_en)/(Vol_c*F) * self.getSuperSystem().SizeN_A/1000";
-    F  @F;
-    Vol_c  @Vol_c;
-    phi_Na_en  @phi_Na_en;
-    tau_Na  14.3; # tau_Na in component cleft_space_ion_concentrations (second)
-    Na_b  130; # Na_b in component cleft_space_ion_concentrations (millimolar)
-
-      VariableReferenceList
-        [Na_c   :.:Na_c    1]
-        [i_Na   :.:i_Na    0]
-        [i_B_Na :.:i_B_Na  0]
-        [i_NaK  :.:i_NaK   0]
-        [i_NaCa :.:i_NaCa  0];
-  }
-
-  Process ExpressionFluxProcess(j_Ca_c)
-  {
-    Name "d/dt Ca_c in component cleft_space_ion_concentrations (millimolar)";
-    Expression "(Ca_b-(Ca_c.MolarConc*1000))/tau_Ca * self.getSuperSystem().SizeN_A/1000 + ((i_Ca_L.Value+i_B_Ca.Value+i_CaP.Value)-2.00000*i_NaCa.Value)/(2.00000*Vol_c*F) * self.getSuperSystem().SizeN_A/1000";
-    F  @F;
-    Vol_c  @Vol_c;
-    tau_Ca  24.7; # tau_Ca in component cleft_space_ion_concentrations (second)
-    Ca_b  1.8; # Ca_b in component cleft_space_ion_concentrations (millimolar)
+    phi_Na_en -1.68;  # phi_Na_en in component intracellular_ion_concentrations (picoA)
 
     VariableReferenceList
-      [Ca_c   :.:Ca_c    1]
-      [i_Ca_L :.:i_Ca_L  0]
-      [i_B_Ca :.:i_B_Ca  0]
-      [i_CaP  :.:i_CaP   0]
-      [i_NaCa :.:i_NaCa  0];
+      [Na_c   :../Cleft:Na_c  1]
+      [Na_i   :.:Na_i        -1]
+      [i_Na   :.:i_Na         0]
+      [i_B_Na :.:i_B_Na       0]
+      [i_NaK  :.:i_NaK        0]
+      [i_NaCa :.:i_NaCa       0];
   }
 
   Process ExpressionFluxProcess(v_O_C)
   {
     Name "d/dt O_C in component intracellular_Ca_buffering (dimensionless)";
+
     Expression "dOCdt.Value";
 
     VariableReferenceList
@@ -1406,37 +1286,10 @@ System System( / )
       [Ca_i  :.:Ca_i   0];
   }
 
-  Process ExpressionAssignmentProcess(i_di)
-  {
-    StepperID    PSV;
-
-    Expression "(((Ca_d.MolarConc*1000)-(Ca_i.MolarConc*1000))*2.00000*F*Vol_d)/tau_di";
-    tau_di  0.01; # tau_di in component intracellular_ion_concentrations (second)
-    Vol_d  @Vol_d;
-    F  @F;
-
-    VariableReferenceList
-      [i_di :.:i_di  1]
-      [Ca_d :.:Ca_d  0]
-      [Ca_i :.:Ca_i  0];
-  }
-
-  Process ExpressionFluxProcess(j_Ca_d)
-  {
-    Name "d/dt Ca_d in component intracellular_ion_concentrations (millimolar)";
-    Expression "-(i_Ca_L.Value+i_di.Value)/(2.00000*Vol_d*F) * self.getSuperSystem().SizeN_A/1000";
-    F  @F;
-    Vol_d  @Vol_d;
-
-    VariableReferenceList
-      [Ca_d   :.:Ca_d    1]
-      [i_di   :.:i_di    0]
-      [i_Ca_L :.:i_Ca_L  0];
-  }
-
   Process ExpressionFluxProcess(v_O_TC)
   {
     Name "d/dt O_TC in component intracellular_Ca_buffering (dimensionless)";
+
     Expression "dOTCdt.Value";
 
     VariableReferenceList
@@ -1448,7 +1301,7 @@ System System( / )
   {
     StepperID    PSV;
 
-  Expression "78400.0*(Ca_i.MolarConc*1000)*(1.00000-O_TC.Value)-392.000*O_TC.Value";
+    Expression "78400.0*(Ca_i.MolarConc*1000)*(1.00000-O_TC.Value)-392.000*O_TC.Value";
 
     VariableReferenceList
       [dOTCdt :.:dOTCdt  1]
@@ -1459,6 +1312,7 @@ System System( / )
   Process ExpressionFluxProcess(v_O_TMgC)
   {
     Name "d/dt O_TMgC in component intracellular_Ca_buffering (dimensionless)";
+
     Expression "dOTMgCdt.Value";
 
     VariableReferenceList
@@ -1479,48 +1333,297 @@ System System( / )
       [O_TMgMg  :.:O_TMgMg   0];
   }
 
+  Process ExpressionFluxProcess(j_Ca_i)
+  {
+    Name "d/dt Ca_i in component intracellular_ion_concentrations (millimolar)";
+
+    Expression "-(0.0800000*dOTCdt.Value+0.160000*dOTMgCdt.Value+0.0450000*dOCdt.Value) * self.getSuperSystem().SizeN_A / 1000";
+
+    F  @F;
+
+    VariableReferenceList
+      [Ca_i     :.:Ca_i      1]
+      [dOTCdt   :.:dOTCdt    0]
+      [dOTMgCdt :.:dOTMgCdt  0]
+      [dOCdt    :.:dOCdt     0];
+  }
+
+    Process ExpressionFluxProcess(j_Ca_i_c)
+    {
+      Name "d/dt Ca_i in component intracellular_ion_concentrations (millimolar)";
+
+      Expression "((((i_B_Ca.Value+i_CaP.Value)-2.00000*i_NaCa.Value)))/(2.00000*F) * N_A * 1.0e-12";
+
+      F  @F;
+
+      VariableReferenceList
+        [Ca_c   :../Cleft:Ca_c  1]
+        [Ca_i   :.:Ca_i        -1]
+        [i_B_Ca :.:i_B_Ca       0]
+        [i_CaP  :.:i_CaP        0]
+        [i_NaCa :.:i_NaCa       0];
+    }
+
+}
+
+System System( /d )
+{
+  StepperID    Default;
+
+  Name "The diffusion-restricted subsarcolemmal space";
+
+  Variable Variable(SIZE)
+  {
+    Name "Vol_d in component intracellular_ion_concentrations (litre)";
+    Value  @(Vol_d * 1.0e-9);
+  }
+
+  Variable Variable(Ca_d)
+  {
+    Name "Ca_d in component intracellular_ion_concentrations (molar)";
+    MolarConc  7.2495e-8;
+  }
+
+  Variable Variable(i_di)
+  {
+    Name "i_di in component intracellular_ion_concentrations (picoA)";
+    Value  0.0;
+  }
+
+  Process ExpressionAssignmentProcess(i_di)
+  {
+    StepperID    PSV;
+
+    Expression "(((Ca_d.MolarConc*1000)-(Ca_i.MolarConc*1000))*2.00000*F* self.getSuperSystem().Size * 1.0e9)/tau_di";
+
+    tau_di  0.01; # tau_di in component intracellular_ion_concentrations (second)
+    F  @F;
+
+    VariableReferenceList
+      [i_di :.:i_di           1]
+      [Ca_d :.:Ca_d           0]
+      [Ca_i :../Cytosol:Ca_i  0];
+  }
+
+  Process ExpressionFluxProcess(j_Ca_di)
+  {
+    Name "d/dt Ca_d in component intracellular_ion_concentrations (millimolar)";
+
+    Expression "(i_di.Value)/(2.00000*F) * N_A * 1.0e-12";
+
+    F  @F;
+
+    VariableReferenceList
+      [Ca_i :../Cytosol:Ca_i  1]
+      [Ca_d :.:Ca_d          -1]
+      [i_di :.:i_di           0];
+  }
+
+  Process ExpressionFluxProcess(j_Ca_d)
+  {
+    Name "d/dt Ca_d in component intracellular_ion_concentrations (millimolar)";
+
+    Expression "-(i_Ca_L.Value)/(2.00000*F) * N_A * 1.0e-12";
+
+    F  @F;
+
+    VariableReferenceList
+      [Ca_d   :.:Ca_d             1]
+      [Ca_c   :../Cleft:Ca_c     -1]
+      [i_Ca_L :../Cytosol:i_Ca_L  0];
+  }
+
+}
+
+System System( /SR_up )
+{
+  StepperID    Default;
+
+  Name "The sarcoplasmic reticulum uptake compartment";
+
+  Variable Variable(SIZE)
+  {
+    Name "Vol_up in component Ca_handling_by_the_SR (litre)";
+    Value  @(Vol_up * 1.0e-9);
+  }
+
+  Variable Variable(i_up)
+  {
+    Name "i_up in component Ca_handling_by_the_SR (picoA)";
+    Value  0.0;
+  }
+
+  Variable Variable(Ca_up)
+  {
+    Name "Ca_up in component Ca_handling_by_the_SR (molar)";
+    MolarConc  0.6646e-3;
+  }
+
   Process ExpressionAssignmentProcess(i_up)
   {
     StepperID    PSV;
 
     Expression "(I_up_max*((Ca_i.MolarConc*1000)/k_cyca-((pow(k_xcs, 2.00000))*(Ca_up.MolarConc*1000))/k_srca))/(((Ca_i.MolarConc*1000)+k_cyca)/k_cyca+(k_xcs*((Ca_up.MolarConc*1000)+k_srca))/k_srca)";
+
     k_srca  0.5; # k_srca in component Ca_handling_by_the_SR (millimolar)
     k_xcs  0.4; # k_xcs in component Ca_handling_by_the_SR (dimensionless)
     k_cyca  0.0003; # k_cyca in component Ca_handling_by_the_SR (millimolar)
     I_up_max  2800; # I_up_max in component Ca_handling_by_the_SR (picoA)
 
     VariableReferenceList
-      [i_up  :.:i_up   1]
-      [Ca_i  :.:Ca_i   0]
-      [Ca_up :.:Ca_up  0];
+      [i_up  :.:i_up           1]
+      [Ca_i  :../Cytosol:Ca_i  0]
+      [Ca_up :.:Ca_up          0];
+  }
+
+  Process ExpressionFluxProcess(j_Ca_up_i)
+  {
+    Name "d/dt Ca_up in component Ca_handling_by_the_SR (millimolar)";
+
+    Expression "i_up.Value/(2.00000*F) * N_A * 1.0e-12";
+
+    F  @F;
+
+    VariableReferenceList
+      [Ca_up :.:Ca_up          1]
+      [Ca_i  :../Cytosol:Ca_i -1]
+      [i_up  :.:i_up           0];
+  }
+
+}
+
+System System( /SR_rel )
+{
+  StepperID    Default;
+
+  Name "The sarcoplasmic reticulum release compartment";
+
+  Variable Variable(SIZE)
+  {
+    Name "Vol_rel in component Ca_handling_by_the_SR (litre)";
+    Value  @(Vol_rel * 1.0e-9);
+  }
+
+  Variable Variable(Ca_rel)
+  {
+    Name "Ca_rel in component Ca_handling_by_the_SR (molar)";
+    MolarConc  0.6465e-3;
+  }
+
+  Variable Variable(F1)
+  {
+    Name "F1 in component Ca_handling_by_the_SR (dimensionless)";
+    Value  0.4284;
+  }
+
+  Variable Variable(F2)
+  {
+    Name "F2 in component Ca_handling_by_the_SR (dimensionless)";
+    Value  0.0028;
+  }
+
+  Variable Variable(i_tr)
+  {
+    Name "i_tr in component Ca_handling_by_the_SR (picoA)";
+    Value  0.0;
+  }
+
+  Variable Variable(i_rel)
+  {
+    Name "i_rel in component Ca_handling_by_the_SR (picoA)";
+    Value  0.0;
+  }
+
+  Variable Variable(O_Calse)
+  {
+    Name "O_Calse in component Ca_handling_by_the_SR (dimensionless)";
+    Value  0.4369;
+  }
+
+  Variable Variable(v_O_Calse)
+  {
+    Name "d/dt O_Calse in component Ca_handling_by_the_SR (dimensionless)";
+    Value  0.0;
+  }
+
+  Variable Variable(r_act)
+  {
+    Name "r_act in component Ca_handling_by_the_SR (per_second)";
+    Value  0.22966210288261288;
+  }
+
+  Variable Variable(r_inact)
+  {
+    Name "r_inact in component Ca_handling_by_the_SR (per_second)";
+    Value  34.342589791678876;
   }
 
   Process ExpressionAssignmentProcess(i_tr)
   {
     StepperID    PSV;
 
-    Expression "(((Ca_up.MolarConc*1000)-(Ca_rel.MolarConc*1000))*2.00000*F*Vol_rel)/tau_tr";
+    Expression "(((Ca_up.MolarConc*1000)-(Ca_rel.MolarConc*1000))*2.00000*F*self.getSuperSystem().Size*1.0e9)/tau_tr";
+
     tau_tr  0.01; # tau_tr in component Ca_handling_by_the_SR (second)
-    Vol_rel  @Vol_rel;
     F  @F;
 
     VariableReferenceList
-      [i_tr   :.:i_tr    1]
-      [Ca_up  :.:Ca_up   0]
-      [Ca_rel :.:Ca_rel  0];
+      [i_tr   :.:i_tr          1]
+      [Ca_up  :../SR_up:Ca_up  0]
+      [Ca_rel :.:Ca_rel        0];
   }
 
-  Process ExpressionFluxProcess(j_Ca_up)
+  Process ExpressionFluxProcess(v_F1)
   {
-    Name "d/dt Ca_up in component Ca_handling_by_the_SR (millimolar)";
-    Expression "(i_up.Value-i_tr.Value)/(2.00000*Vol_up*F) * self.getSuperSystem().SizeN_A/1000";
-    F  @F;
-    Vol_up  @Vol_up; # Vol_up in component Ca_handling_by_the_SR (nanolitre)
+    Expression "r_recov*((1.00000-F1.Value)-F2.Value)-r_act.Value*F1.Value";
+
+    r_recov  0.815; # r_recov in component Ca_handling_by_the_SR (per_second)
 
     VariableReferenceList
-      [Ca_up :.:Ca_up  1]
-      [i_up  :.:i_up   0]
-      [i_tr  :.:i_tr   0];
+      [F1    :.:F1     1]
+      [F2    :.:F2     0]
+      [r_act :.:r_act  0];
+  }
+
+  Process ExpressionFluxProcess(v_F2)
+  {
+    Name "d/dt F2 in component Ca_handling_by_the_SR (dimensionless)";
+
+    Expression "r_act.Value*F1.Value-r_inact.Value*F2.Value";
+
+    VariableReferenceList
+      [F2      :.:F2       1]
+      [r_act   :.:r_act    0]
+      [F1      :.:F1       0]
+      [r_inact :.:r_inact  0];
+  }
+
+  Process ExpressionAssignmentProcess(r_act)
+  {
+    StepperID    PSV;
+
+    Expression "203.800*(pow((Ca_i.MolarConc*1000)/((Ca_i.MolarConc*1000)+k_rel_i), 4.00000)+pow((Ca_d.MolarConc*1000)/((Ca_d.MolarConc*1000)+k_rel_d), 4.00000))";
+
+    k_rel_d  0.003; # k_rel_d in component Ca_handling_by_the_SR (millimolar)
+    k_rel_i  @k_rel_i;
+
+    VariableReferenceList
+      [r_act :.:r_act          1]
+      [Ca_i  :../Cytosol:Ca_i  0]
+      [Ca_d  :../d:Ca_d        0];
+  }
+
+  Process ExpressionAssignmentProcess(r_inact)
+  {
+    StepperID    PSV;
+
+    Expression "33.9600+339.600*(pow((Ca_i.MolarConc*1000)/((Ca_i.MolarConc*1000)+k_rel_i), 4.00000))";
+
+    k_rel_i  @k_rel_i;
+
+    VariableReferenceList
+      [r_inact :.:r_inact        1]
+      [Ca_i    :../Cytosol:Ca_i  0];
   }
 
   Process ExpressionAssignmentProcess(i_rel)
@@ -1528,33 +1631,55 @@ System System( / )
     StepperID    PSV;
 
     Expression "alpha_rel*(pow(F2.Value/(F2.Value+0.250000), 2.00000))*((Ca_rel.MolarConc*1000)-(Ca_i.MolarConc*1000))";
+
     alpha_rel  200000; # alpha_rel in component Ca_handling_by_the_SR (picoA_per_millimolar)
 
     VariableReferenceList
-      [i_rel  :.:i_rel   1]
-      [F2     :.:F2      0]
-      [Ca_rel :.:Ca_rel  0]
-      [Ca_i   :.:Ca_i    0];
+      [i_rel  :.:i_rel          1]
+      [F2     :.:F2             0]
+      [Ca_rel :.:Ca_rel         0]
+      [Ca_i   :../Cytosol:Ca_i  0];
   }
 
-  Process ExpressionFluxProcess(j_Ca_i)
+  Process ExpressionFluxProcess(j_Ca_rel_up)
   {
-    Name "d/dt Ca_i in component intracellular_ion_concentrations (millimolar)";
-    Expression "-((((-i_di.Value+i_B_Ca.Value+i_CaP.Value)-2.00000*i_NaCa.Value)+i_up.Value)-i_rel.Value)/(2.00000*Vol_i*F) * self.getSuperSystem().SizeN_A/1000 -(0.0800000*dOTCdt.Value+0.160000*dOTMgCdt.Value+0.0450000*dOCdt.Value) * self.getSuperSystem().SizeN_A/1000";
+    Name "d/dt Ca_rel in component Ca_handling_by_the_SR (millimolar)";
+
+    Expression "i_tr.Value/(2.00000*F) * N_A * 1.0e-12";
+
     F  @F;
-    Vol_i  @Vol_i;
 
     VariableReferenceList
-      [Ca_i     :.:Ca_i      1]
-      [i_di     :.:i_di      0]
-      [i_B_Ca   :.:i_B_Ca    0]
-      [i_CaP    :.:i_CaP     0]
-      [i_NaCa   :.:i_NaCa    0]
-      [i_up     :.:i_up      0]
-      [i_rel    :.:i_rel     0]
-      [dOTCdt   :.:dOTCdt    0]
-      [dOTMgCdt :.:dOTMgCdt  0]
-      [dOCdt    :.:dOCdt     0];
+      [Ca_rel :.:Ca_rel       1]
+      [Ca_up  :../SR_up:Ca_up -1]
+      [i_tr   :.:i_tr         0];
+  }
+
+  Process ExpressionFluxProcess(j_Ca_rel_i)
+  {
+    Name "d/dt Ca_rel in component Ca_handling_by_the_SR (millimolar)";
+
+    Expression "i_rel.Value/(2.00000*F) * N_A * 1.0e-12";
+
+    F  @F;
+
+    VariableReferenceList
+      [Ca_rel    :.:Ca_rel        -1]
+      [Ca_i      :../Cytosol:Ca_i  1]
+      [i_rel     :.:i_rel          0];
+  }
+
+  Process ExpressionFluxProcess(j_Ca_rel)
+  {
+    Name "d/dt Ca_rel in component Ca_handling_by_the_SR (millimolar)";
+
+    Expression "-31.0000 * v_O_Calse.Value * self.getSuperSystem().SizeN_A / 1000";
+
+    F  @F;
+
+    VariableReferenceList
+      [Ca_rel    :.:Ca_rel     1]
+      [v_O_Calse :.:v_O_Calse  0];
   }
 
   Process ExpressionAssignmentProcess(v_O_Calse_assign)
@@ -1562,35 +1687,23 @@ System System( / )
     StepperID    PSV;
 
     Name "d/dt O_Calse in component Ca_handling_by_the_SR (dimensionless)";
+
     Expression "480.000*(Ca_rel.MolarConc*1000)*(1.00000-O_Calse.Value)-400.000*O_Calse.Value";
 
-      VariableReferenceList
-        [v_O_Calse :.:v_O_Calse  1]
-        [O_Calse   :.:O_Calse    0]
-        [Ca_rel    :.:Ca_rel     0];
+    VariableReferenceList
+      [v_O_Calse :.:v_O_Calse  1]
+      [O_Calse   :.:O_Calse    0]
+      [Ca_rel    :.:Ca_rel     0];
   }
 
   Process ExpressionFluxProcess(v_O_Calse)
   {
     Name "d/dt O_Calse in component Ca_handling_by_the_SR (dimensionless)";
+
     Expression "v_O_Calse.Value";
 
-      VariableReferenceList
-        [O_Calse   :.:O_Calse    1]
-        [v_O_Calse :.:v_O_Calse  0];
-  }
-
-  Process ExpressionFluxProcess(j_Ca_rel)
-  {
-    Name "d/dt Ca_rel in component Ca_handling_by_the_SR (millimolar)";
-    Expression "(i_tr.Value-i_rel.Value)/(2.00000*Vol_rel*F) * self.getSuperSystem().SizeN_A/1000 -31.0000*v_O_Calse.Value * self.getSuperSystem().SizeN_A/1000";
-    F  @F;
-    Vol_rel  @Vol_rel;
-
     VariableReferenceList
-      [Ca_rel    :.:Ca_rel     1]
-      [i_tr      :.:i_tr       0]
-      [i_rel     :.:i_rel      0]
+      [O_Calse   :.:O_Calse    1]
       [v_O_Calse :.:v_O_Calse  0];
   }
 
