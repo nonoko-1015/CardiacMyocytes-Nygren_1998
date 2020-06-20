@@ -26,7 +26,7 @@ References
 Benchmark
 -----------
 
-* The custom Process model `Nygren_1998_custom.em` is 65% faster than the Expression-based Process model `Nygren_1998.em`. 
+* The custom Process model `Nygren_1998_custom.em` is 145% faster than the Expression-based Process model `Nygren_1998.em`. 
 
 ```bash
 $ ECELL3_DM_PATH="." ecell3-session -f Nygren_1998.em 
@@ -55,6 +55,6 @@ More info: http://www.e-cell.org/software
 <Nygren_1998_custom.em, t=0>>> import time
 <Nygren_1998_custom.em, t=0>>> t0 = time.time(); run(3); t1 = time.time()
 <Nygren_1998_custom.em, t=3>>> print(t1-t0)
-2.60963797569
+1.75741791725
 ```
 
