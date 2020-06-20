@@ -23,3 +23,38 @@ References
   * [Exposures](https://models.physiomeproject.org/exposure/ad761ce160f3b4077bbae7a004c229e3)
   * [Generated Code (Python)](https://models.physiomeproject.org/exposure/ad761ce160f3b4077bbae7a004c229e3/nygren_fiset_firek_clark_lindblad_clark_giles_1998.cellml/@@cellml_codegen/Python)
 
+Benchmark
+-----------
+
+* The custom Process model `Nygren_1998_custom.em` is 65% faster than the Expression-based Process model `Nygren_1998.em`. 
+
+```bash
+$ ECELL3_DM_PATH="." ecell3-session -f Nygren_1998.em 
+session_history_file : /Volumes/Home/ynaito/.ecell/session-history
+ecell3-session [ E-Cell SE Version 3.2.8, on Python Version 2.7.16 ]
+Copyright (C) 1996-2019 Keio University
+Copyright (C) 2008-2019 RIKEN
+Copyright (C) 2005-2009 The Molecular Sciences Institute
+More info: http://www.e-cell.org/software
+<Nygren_1998.em, t=0>>> import time
+<Nygren_1998.em, t=0>>> t0 = time.time(); run(3); t1 = time.time()
+<Nygren_1998.em, t=3>>> print(t1-t0)
+4.30589008331
+```
+
+
+
+```bash
+$ ECELL3_DM_PATH="." ecell3-session -f Nygren_1998_custom.em 
+session_history_file : /Volumes/Home/ynaito/.ecell/session-history
+ecell3-session [ E-Cell SE Version 3.2.8, on Python Version 2.7.16 ]
+Copyright (C) 1996-2019 Keio University
+Copyright (C) 2008-2019 RIKEN
+Copyright (C) 2005-2009 The Molecular Sciences Institute
+More info: http://www.e-cell.org/software
+<Nygren_1998_custom.em, t=0>>> import time
+<Nygren_1998_custom.em, t=0>>> t0 = time.time(); run(3); t1 = time.time()
+<Nygren_1998_custom.em, t=3>>> print(t1-t0)
+2.60963797569
+```
+
