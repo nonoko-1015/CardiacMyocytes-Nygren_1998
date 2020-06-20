@@ -6,3 +6,4 @@
 *.zip
 tmp_code_*
 .DS_Store
+.ipynb_checkpoints
