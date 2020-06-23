@@ -512,7 +512,7 @@ System System( /Cytosol )
     Value  0.0;
   }
 
-  Process Nygren_1998v_VFluxProcess(v_V)
+  Process Nygren_1998_VFluxProcess(v_V)
   {
     Name "d/dt V in component membrane (millivolt)";
 
