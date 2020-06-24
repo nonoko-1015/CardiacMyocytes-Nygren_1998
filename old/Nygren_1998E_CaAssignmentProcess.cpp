@@ -41,7 +41,7 @@ LIBECS_DM_CLASS( Nygren_1998E_CaAssignmentProcess, Process )
 
   virtual void fire()
   {
-    E_Ca->setValue( 1 * (((R*T)/(2.00000*F))*log(Ca_c->getValue()/Ca_i->getValue())) );
+    E_Ca->setValue( 1 * (((R*T)/(2.00000*F))*log(Ca_c->getMolarConc()/Ca_i->getMolarConc())) );
 
   }
 

@@ -595,17 +595,18 @@ System System( /Cytosol )
         [i_NaCa :.:i_NaCa       0];
     }
 
-  Process Nygren_1998E_KAssignmentProcess(E_K)
+  Process Nygren_1998_EAssignmentProcess(E_K)
   {
     StepperID    PSV;
     F  @F;
     T  @T;
     R  @R;
+    z  1;
 
     VariableReferenceList
-      [E_K :.:E_K         1]
-      [K_c :../Cleft:K_c  0]
-      [K_i :.:K_i         0];
+      [E :.:E_K         1]
+      [o :../Cleft:K_c  0]
+      [i :.:K_i         0];
   }
 
   Process Nygren_1998_ItAssignmentProcess(i_t)
@@ -626,24 +627,24 @@ System System( /Cytosol )
       [E_K        :.:E_K         0];
   }
 
-  Process Nygren_1998v_rFluxProcess(v_r)
+  Process Nygren_1998_GatingFluxProcess(v_r)
   {
     Name "d/dt r in component Ca_independent_transient_outward_K_current_r_gate (dimensionless)";
 
     VariableReferenceList
-      [r          :.:r           1]
-      [r_infinity :.:r_infinity  0]
-      [tau_r      :.:tau_r       0];
+      [gate  :.:r           1]
+      [g_inf :.:r_infinity  0]
+      [g_tau :.:tau_r       0];
   }
 
-  Process Nygren_1998v_sFluxProcess(v_s)
+  Process Nygren_1998_GatingFluxProcess(v_s)
   {
     Name "d/dt s in component Ca_independent_transient_outward_K_current_s_gate (dimensionless)";
 
     VariableReferenceList
-      [s          :.:s           1]
-      [s_infinity :.:s_infinity  0]
-      [tau_s      :.:tau_s       0];
+      [gate  :.:s           1]
+      [g_inf :.:s_infinity  0]
+      [g_tau :.:tau_s       0];
   }
 
   Process Nygren_1998_IsusAssignmentProcess(i_sus)
@@ -664,24 +665,24 @@ System System( /Cytosol )
       [E_K            :.:E_K             0];
   }
 
-  Process Nygren_1998v_r_susFluxProcess(v_r_sus)
+  Process Nygren_1998_GatingFluxProcess(v_r_sus)
   {
     Name "d/dt r_sus in component sustained_outward_K_current_r_sus_gate (dimensionless)";
 
     VariableReferenceList
-      [r_sus          :.:r_sus           1]
-      [r_sus_infinity :.:r_sus_infinity  0]
-      [tau_r_sus      :.:tau_r_sus       0];
+      [gate  :.:r_sus           1]
+      [g_inf :.:r_sus_infinity  0]
+      [g_tau :.:tau_r_sus       0];
   }
 
-  Process Nygren_1998v_s_susFluxProcess(v_s_sus)
+  Process Nygren_1998_GatingFluxProcess(v_s_sus)
   {
     Name "d/dt s_sus in component sustained_outward_K_current_s_sus_gate (dimensionless)";
 
     VariableReferenceList
-      [s_sus          :.:s_sus           1]
-      [s_sus_infinity :.:s_sus_infinity  0]
-      [tau_s_sus      :.:tau_s_sus       0];
+      [gate  :.:s_sus           1]
+      [g_inf :.:s_sus_infinity  0]
+      [g_tau :.:tau_s_sus       0];
   }
 
   Process Nygren_1998_IKrAssignmentProcess(i_Kr)
@@ -700,14 +701,14 @@ System System( /Cytosol )
       [E_K  :.:E_K   0];
   }
 
-  Process Nygren_1998v_p_aFluxProcess(v_p_a)
+  Process Nygren_1998_GatingFluxProcess(v_p_a)
   {
     Name "d/dt p_a in component delayed_rectifier_K_currents_pa_gate (dimensionless)";
 
     VariableReferenceList
-      [p_a          :.:p_a           1]
-      [p_a_infinity :.:p_a_infinity  0]
-      [tau_p_a      :.:tau_p_a       0];
+      [gate  :.:p_a           1]
+      [g_inf :.:p_a_infinity  0]
+      [g_tau :.:tau_p_a       0];
   }
 
   Process Nygren_1998_IKsAssignmentProcess(i_Ks)
@@ -725,14 +726,14 @@ System System( /Cytosol )
       [E_K  :.:E_K   0];
   }
 
-  Process Nygren_1998v_nFluxProcess(v_n)
+  Process Nygren_1998_GatingFluxProcess(v_n)
   {
     Name "d/dt n in component delayed_rectifier_K_currents_n_gate (dimensionless)";
 
     VariableReferenceList
-      [n          :.:n           1]
-      [n_infinity :.:n_infinity  0]
-      [tau_n      :.:tau_n       0];
+      [gate  :.:n           1]
+      [g_inf :.:n_infinity  0]
+      [g_tau :.:tau_n       0];
   }
 
   Process Nygren_1998i_K1AssignmentProcess(i_K1)
@@ -766,18 +767,19 @@ System System( /Cytosol )
       [V     :.:V           0];
   }
 
-  Process Nygren_1998E_NaAssignmentProcess(E_Na)
+  Process Nygren_1998_EAssignmentProcess(E_Na)
   {
     StepperID    PSV;
 
     F  @F;
     T  @T;
     R  @R;
+    z  1;
 
     VariableReferenceList
-      [E_Na :.:E_Na         1]
-      [Na_c :../Cleft:Na_c  0]
-      [Na_i :.:Na_i         0];
+      [E :.:E_Na         1]
+      [o :../Cleft:Na_c  0]
+      [i :.:Na_i         0];
   }
 
   Process Nygren_1998_INaAssignmentProcess(i_Na)
@@ -804,33 +806,33 @@ System System( /Cytosol )
       [E_Na :.:E_Na         0];
   }
 
-  Process Nygren_1998v_mFluxProcess(v_m)
+  Process Nygren_1998_GatingFluxProcess(v_m)
   {
 
     VariableReferenceList
-      [m          :.:m           1]
-      [m_infinity :.:m_infinity  0]
-      [tau_m      :.:tau_m       0];
+      [gate  :.:m           1]
+      [g_inf :.:m_infinity  0]
+      [g_tau :.:tau_m       0];
   }
 
-  Process Nygren_1998v_h1FluxProcess(v_h1)
+  Process Nygren_1998_GatingFluxProcess(v_h1)
   {
     Name "d/dt h1 in component sodium_current_h1_gate (dimensionless)";
 
     VariableReferenceList
-      [h1         :.:h1          1]
-      [h_infinity :.:h_infinity  0]
-      [tau_h1     :.:tau_h1      0];
+      [gate  :.:h1          1]
+      [g_inf :.:h_infinity  0]
+      [g_tau :.:tau_h1      0];
   }
 
-  Process Nygren_1998v_h2FluxProcess(v_h2)
+  Process Nygren_1998_GatingFluxProcess(v_h2)
   {
     Name "d/dt h2 in component sodium_current_h2_gate (dimensionless)";
 
     VariableReferenceList
-      [h2         :.:h2          1]
-      [h_infinity :.:h_infinity  0]
-      [tau_h2     :.:tau_h2      0];
+      [gate  :.:h2          1]
+      [g_inf :.:h_infinity  0]
+      [g_tau :.:tau_h2      0];
   }
 
   Process Nygren_1998i_B_NaAssignmentProcess(i_B_Na)
@@ -845,18 +847,19 @@ System System( /Cytosol )
       [E_Na   :.:E_Na    0];
   }
 
-  Process Nygren_1998E_CaAssignmentProcess(E_Ca)
+  Process Nygren_1998_EAssignmentProcess(E_Ca)
   {
     StepperID    PSV;
 
     F  @F;
     T  @T;
     R  @R;
+    z  2;
 
     VariableReferenceList
-      [E_Ca :.:E_Ca         1]
-      [Ca_c :../Cleft:Ca_c  0]
-      [Ca_i :.:Ca_i         0];
+      [E :.:E_Ca         1]
+      [o :../Cleft:Ca_c  0]
+      [i :.:Ca_i         0];
   }
 
   Process Nygren_1998_ICaLAssignmentProcess(i_Ca_L)
@@ -882,34 +885,34 @@ System System( /Cytosol )
       [V      :.:V       0];
   }
 
-  Process Nygren_1998v_d_LFluxProcess(v_d_L)
+  Process Nygren_1998_GatingFluxProcess(v_d_L)
   {
     Name "d/dt d_L in component L_type_Ca_channel_d_L_gate (dimensionless)";
 
     VariableReferenceList
-      [d_L          :.:d_L           1]
-      [d_L_infinity :.:d_L_infinity  0]
-      [tau_d_L      :.:tau_d_L       0];
+      [gate  :.:d_L           1]
+      [g_inf :.:d_L_infinity  0]
+      [g_tau :.:tau_d_L       0];
   }
 
-  Process Nygren_1998v_f_L_1FluxProcess(v_f_L_1)
+  Process Nygren_1998_GatingFluxProcess(v_f_L_1)
   {
     Name "d/dt f_L_1 in component L_type_Ca_channel_f_L1_gate (dimensionless)";
 
     VariableReferenceList
-      [f_L_1        :.:f_L_1         1]
-      [f_L_infinity :.:f_L_infinity  0]
-      [tau_f_L1     :.:tau_f_L1      0];
+      [gate  :.:f_L_1         1]
+      [g_inf :.:f_L_infinity  0]
+      [g_tau :.:tau_f_L1      0];
   }
 
-  Process Nygren_1998v_f_L_2FluxProcess(v_f_L_2)
+  Process Nygren_1998_GatingFluxProcess(v_f_L_2)
   {
     Name "d/dt f_L_2 in component L_type_Ca_channel_f_L2_gate (dimensionless)";
 
     VariableReferenceList
-      [f_L_2        :.:f_L_2         1]
-      [f_L_infinity :.:f_L_infinity  0]
-      [tau_f_L2     :.:tau_f_L2      0];
+      [gate  :.:f_L_2         1]
+      [g_inf :.:f_L_infinity  0]
+      [g_tau :.:tau_f_L2      0];
   }
 
   Process Nygren_1998i_B_CaAssignmentProcess(i_B_Ca)
