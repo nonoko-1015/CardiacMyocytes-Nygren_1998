@@ -835,16 +835,16 @@ System System( /Cytosol )
       [g_tau :.:tau_h2      0];
   }
 
-  Process Nygren_1998i_B_NaAssignmentProcess(i_B_Na)
+  Process Nygren_1998_BackgroudLeakAssignmentProcess(i_B_Na)
   {
     StepperID    PSV;
 
-    g_B_Na  0.060599; # g_B_Na in component background_currents (nanoS)
+    g  0.060599; # g_B_Na in component background_currents (nanoS)
 
     VariableReferenceList
-      [i_B_Na :.:i_B_Na  1]
-      [V      :.:V       0]
-      [E_Na   :.:E_Na    0];
+      [i :.:i_B_Na  1]
+      [V :.:V       0]
+      [E :.:E_Na    0];
   }
 
   Process Nygren_1998_EAssignmentProcess(E_Ca)
@@ -915,16 +915,16 @@ System System( /Cytosol )
       [g_tau :.:tau_f_L2      0];
   }
 
-  Process Nygren_1998i_B_CaAssignmentProcess(i_B_Ca)
+  Process Nygren_1998_BackgroudLeakAssignmentProcess(i_B_Ca)
   {
     StepperID    PSV;
 
-    g_B_Ca  0.078681; # g_B_Ca in component background_currents (nanoS)
+    g  0.078681; # g_B_Ca in component background_currents (nanoS)
 
     VariableReferenceList
-      [i_B_Ca :.:i_B_Ca  1]
-      [V      :.:V       0]
-      [E_Ca   :.:E_Ca    0];
+      [i :.:i_B_Ca  1]
+      [V :.:V       0]
+      [E :.:E_Ca    0];
   }
 
   Process Nygren_1998i_CaPAssignmentProcess(i_CaP)
