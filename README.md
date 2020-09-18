@@ -19,17 +19,17 @@ References
 -----------
 
 * CellML Nygren, Fiset, Firek, Clark, Lindblad, Clark, Giles, 1998
-  * [Workspaces](https://models.physiomeproject.org/workspace/nygren_fiset_firek_clark_lindblad_clark_giles_1998) 
+  * [Workspaces](https://models.physiomeproject.org/workspace/nygren_fiset_firek_clark_lindblad_clark_giles_1998)
   * [Exposures](https://models.physiomeproject.org/exposure/ad761ce160f3b4077bbae7a004c229e3)
   * [Generated Code (Python)](https://models.physiomeproject.org/exposure/ad761ce160f3b4077bbae7a004c229e3/nygren_fiset_firek_clark_lindblad_clark_giles_1998.cellml/@@cellml_codegen/Python)
 
 Benchmark
 -----------
 
-* The custom Process model `Nygren_1998_custom.em` is 145% faster than the Expression-based Process model `Nygren_1998.em`. 
+* The custom Process model `Nygren_1998_custom.em` is 145% faster than the Expression-based Process model `Nygren_1998.em`.
 
 ```bash
-$ ECELL3_DM_PATH="." ecell3-session -f Nygren_1998.em 
+$ ECELL3_DM_PATH="." ecell3-session -f Nygren_1998.em
 session_history_file : /Volumes/Home/ynaito/.ecell/session-history
 ecell3-session [ E-Cell SE Version 3.2.8, on Python Version 2.7.16 ]
 Copyright (C) 1996-2019 Keio University
@@ -45,7 +45,7 @@ More info: http://www.e-cell.org/software
 
 
 ```bash
-$ ECELL3_DM_PATH="." ecell3-session -f Nygren_1998_custom.em 
+$ ECELL3_DM_PATH="." ecell3-session -f Nygren_1998_custom.em
 session_history_file : /Volumes/Home/ynaito/.ecell/session-history
 ecell3-session [ E-Cell SE Version 3.2.8, on Python Version 2.7.16 ]
 Copyright (C) 1996-2019 Keio University
@@ -58,3 +58,11 @@ More info: http://www.e-cell.org/software
 1.75741791725
 ```
 
+Verification
+--------------
+INaの各パラメーター
+ICaLの各パラメーター
+Isus、Itの各パラメーター
+IKr、IKsの各パラメーター
+Isus、ICaL、Vm、INa、Itの値
+↑検証済
